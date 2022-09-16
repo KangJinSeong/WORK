@@ -5,7 +5,6 @@ By: Kang Jin Seong
 
 '''
 
-
 import RPi.GPIO as GPIO
 import datetime as dt
 import time
@@ -15,10 +14,10 @@ from multiprocessing import Process, Queue
 import paho.mqtt.subscribe as subscribe
 
 
-channel = 23
-led = 18
+channel = 23    # 1pps 신호 입력 포트 설정
+led = 18    # 트리거 신호 출력 포트 설정
 
-GPIO.setmode(GPIO.BCM)
+GPIO.setmode(GPIO.BCM)  #GPIO 포트 설정은 
 GPIO.setup(channel, GPIO.IN)    # 1pps 신호 입력 포트
 GPIO.setup(led, GPIO.OUT)   # FPGA 트리거 출력 신호
 GPIO.setwarnings(False)
@@ -104,13 +103,14 @@ def mqtt_publish_rasp(uartdata):
     topicRx = "Core/sendTestData1234/data"
     broker = "test.mosquitto.org"
     while True:
-        if not serverRXdata.empty(): # 큐버퍼가 꽉차있으면 실행
+        if not uartdata.empty(): # 큐버퍼가 꽉차있으면 실행
             m = uartdata.get()
             print('Message:', m)
 def uart_FPGA(uartdata):
-    serialIP = serial.Serial('/dev/ttyS0', baudrate= 9600, timeout = 10)
-
+    # serialIP = serial.Serial('/dev/ttyS0', baudrate= 9600, timeout = 10)
+    serialIP = serial.Serial('/dev/ttyUSB0', baudrate= 9600, timeout = 10)
     while True:
+        serialIP.write(b'\x3E\x35\x40\x30\x0D')
         data = serialIP.read(1024)
         print('RX data:',data)
         uartdata.put(data)
