@@ -1,0 +1,18 @@
+'''
+Date: 2022.09.22
+Title: 라즈베리파이 부팅시 터미널에서 자동실행
+By: Kang Jin Seong
+'''
+
+# 파이썬 스트립트 파일을 라즈베리파이 OS 부팅 시 터미널(LXterminal)에서 자동 실행될 수 있도록 스크립트를 작성
+# 경로는 /etc/xdg/autostart
+# 파일 확장자는 .desktop
+
+sudo nano /etc/xdg/autostart/파일이름.desktop
+
+[Desktop Entry]
+Encoding=UTF-8
+Exec=lxterminal --command "/bin/bash -c '/bin/python3 /home/pi/파일이름.py; read -p \"Press enter to continue\"; /bin/bash'"
+
+# 실제로 실행할구문을 Exec= 뒤에 적기
+# 파이썬 스크립트 실행 후 터미널 창이 바로 닫히는것을 방지 하기 위해 read 명령어로 키보드 입력을 기달릴 수 있게 함.
