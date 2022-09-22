@@ -1,5 +1,5 @@
 '''
-Date: 2022.09.16
+Date: 2022.09.21
 Title: 3차원 해수유동 시스템 데이터 관리
 By: Kang Jin Seong
 
@@ -183,24 +183,27 @@ if __name__ == '__main__':
     uartdata = Queue()
     version_state = Queue()
     while True:
-        print('version Detect')
+        print('Internet Detecting...')
         time.sleep(3)
-        if version_on() & internet_on():
-            print('Done')
-            p1 = Process(target = triger, args =(serverRXdata, version_state,))
-            p2 = Process(target = mqtt_subscribe_rasp, args = (serverRXdata,))
-            p3 = Process(target = mqtt_publish_rasp, args = (uartdata,))
-            p4 = Process(target = uart_FPGA, args = (uartdata, ))
+        if internet_on():
+            if version_on():
+                print('version Detecting...')
+                time.sleep(3)
+                print('Done')
+                p1 = Process(target = triger, args =(serverRXdata, version_state,))
+                p2 = Process(target = mqtt_subscribe_rasp, args = (serverRXdata,))
+                p3 = Process(target = mqtt_publish_rasp, args = (uartdata,))
+                p4 = Process(target = uart_FPGA, args = (uartdata, ))
 
-            p1.start()
-            p2.start()
-            p3.start()
-            p4.start()
-            
+                p1.start()
+                p2.start()
+                p3.start()
+                p4.start()
 
-            p1.join()
-            p2.join()
-            p3.join()
-            p4.join()
-            
-            break
+
+                p1.join()
+                p2.join()
+                p3.join()
+                p4.join()
+
+                break
