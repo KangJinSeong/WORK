@@ -133,7 +133,7 @@ def mqtt_publish_rasp(uartdata):
             print(m)
             if internet_on():
                 publish.single(topics,m, hostname = broker) 
-            print('Done1')
+                print('Done1')
 
         if GPIO.input(channel) == 1:
             print('GPS ON')
@@ -181,7 +181,7 @@ def version_on():
  
 def internet_on():
     try:
-        request.urlopen('http://223.130.200.107', timeout = 1)
+        request.urlopen('http://223.130.200.107', timeout = 2)
         return True
     except Exception as e:
         print('internet error')
