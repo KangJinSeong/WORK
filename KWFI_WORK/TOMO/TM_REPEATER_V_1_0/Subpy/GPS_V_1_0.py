@@ -6,6 +6,8 @@ By: Kang Jin seong
 
 from Subpy import config
 from Subpy import L76X
+# import config   #단독으로 설정할떄
+# import L76X #단독으로 설정할때
 import time
 
 
@@ -43,7 +45,7 @@ class GPS_HAT:
         lat,lon = self.get_data()
         lat = '{:0.8f}'.format(lat)
         lon = '{:0.8f}'.format(lon)
-        print(lat, lon)
+        # print(lat, lon)
         return lat, lon
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 
 from Subpy import config
+# import config
 import math
 import time
 import RPi.GPIO as GPIO
