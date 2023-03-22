@@ -26,32 +26,42 @@ class GPS_HAT:
         self.x.L76X_Send_Command(x.SET_NMEA_BAUDRATE_115200)
         time.sleep(2)
         self.x.L76X_Set_Baudrate(115200)
+        self.lattidue = 0
+        self.longitude = 0
     def get_data(self):
         data = self.x.L76X_Gat_GNRMC()
-        data = data.decode()
+        data = data.decode(encoding='ISO-8859-1')
         answer = data.split('\r\n')
         for i in answer:
             if '$GNRMC' in i:
                 result = i.split(',')[1:]
                 for i,r in zip(result, result[1:]):
                     if r == 'N':
-                        lattidue = float(i[:2]) + float(i[2:])/60   #위도
+                        self.lattidue = float(i[:2]) + float(i[2:])/60   #위도
                     if r == 'E':
-                        longitude = float(i[:3]) + float(i[3:])/60  #경도
-
-        return lattidue, longitude
+                        self.longitude = float(i[:3]) + float(i[3:])/60  #경도
+                return self.lattidue, self.longitude
+        self.lattidue = 0
+        self.longitude = 0
+        return self.lattidue, self.longitude  
 
     def main(self):
         lat,lon = self.get_data()
+
+        '''
+        lat, lon 데이터가 없을 경우 처리 루틴 필요
+        '''
+
         lat = '{:0.8f}'.format(lat)
         lon = '{:0.8f}'.format(lon)
-        # print(lat, lon)
+
+
         return lat, lon
 
 if __name__ == "__main__":
     print('GPS START')
     A = GPS_HAT()
     try:
-        A.main()
+        print(A.main())
     except Exception as e:
         pass
