@@ -45,13 +45,6 @@ class TRX_TRG:
         else:
             result = [0,0,0,0]
         return result 
-    
-    def Ping_Net(self):
-        response = os.system("ping -c 1 " + 'www.google.com')
-        if response == 0:
-            return True
-        else:
-            return False
         
     def main(self, stationid):
         if (self.s_hour%24) == datetime.now().hour:
@@ -70,7 +63,7 @@ class TRX_TRG:
                     print('FPGA_TX:', FPGA_TX)
                     data = self.UARTIP.FPGA_ECO_Dat_analysis()
                     print('ECO DATA:', data)
-                    if data == FPGA_TX:
+                    if data == FPGA_TX:     # Test !=
                         print('TRX_Triger START')
                         time.sleep(1)
                         GPIO.output(self.TXEN, True)
@@ -88,15 +81,18 @@ class TRX_TRG:
                     if len(data) > 0:
                         if data[0] == '(':
                             data_answer = data.replace(')(', ',')
-                            data_answer = data_answer[1:-3]
+                            data_answer = data_answer[1:-1]
 
                             Pico_data = self.UARTIP.PICO_Dat_analysis()
                             print(type(stationid), type(Pico_data), type(data_answer))
-                            result = bytes(str(stationid),'utf-8')+b','+Pico_data[1:]+b','+bytes(data_answer,'utf-8')
+                            FPGA_Temp_data = self.UARTIP.FPGA_Put_Temp()
+
+                            result = bytes(stationid,'utf-8')+b','+[Pico_data[1:] if b'\x00' in Pico_data else Pico_data][0]+b',' + bytes(FPGA_Temp_data,'utf-8')+b','+bytes(data_answer,'utf-8')
                             print('RX Data:', result)
-                            if self.Ping_Net():
-                                publish.single(topic='Core/sendTestData1234/data',payload = result,hostname='test.mosquitto.org',keepalive= 0)
+       
+                            publish.single(topic='Core/sendTestData1234/data',payload = result,hostname='test.mosquitto.org',keepalive= 0)
                             break
+
 
 if __name__ == "__main__":
     print('TRX_Triger ON')
@@ -109,7 +105,7 @@ if __name__ == "__main__":
 
     A = TRX_TRG()
 
-    A.timezone(hour = 12,min = 13,interval = 4,id = 2)
+    A.timezone(hour = 13,min = 34,interval = 4,id = 2)
     while True:
         A.main(1)
          

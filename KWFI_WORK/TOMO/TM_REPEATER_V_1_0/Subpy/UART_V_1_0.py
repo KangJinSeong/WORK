@@ -10,7 +10,7 @@ class UART_HAT:
 
         self.FPGA_baudreate = 115200
         self.FPGA_PORT = '/dev/ttyAMA1'
-        self.FPGA_UART = serial.Serial(self.FPGA_PORT, self.FPGA_baudreate, timeout= 20)
+        self.FPGA_UART = serial.Serial(self.FPGA_PORT, self.FPGA_baudreate, timeout= 7)
         self.FPGA_EN = 22   #Pin 15
 
         self.FPGA_Version = ''.join([chr(i) for i in [0x3E,0x35,0x40,0x30,0x0D]])
@@ -29,8 +29,8 @@ class UART_HAT:
         return data
 
     def FPGA_ECO_Dat_analysis(self):
-
-        data = self.FPGA_UART.read(5)
+        data = self.FPGA_UART.readline()
+        print(data)
         Data = data.decode()
         return Data
     
@@ -46,14 +46,23 @@ class UART_HAT:
         GPIO.output(self.FPGA_EN, True)
         self.FPGA_UART.write(self.FPGA_Temp.encode())
         GPIO.output(self.FPGA_EN, False)
+        data = self.FPGA_Dat_analysis()
+        data = data.split('=')
+
+        return data[1][0:-1]
+
     def FPGA_Put_TX(self, FPGA_TX):
         GPIO.output(self.FPGA_EN, True)
         self.FPGA_UART.write(str(FPGA_TX).encode())
         GPIO.output(self.FPGA_EN, False)      
 
     def main(self):
-        data = self.PICO_Dat_analysis()
-        print(data)
+        FPGA_TX = ''.join([chr(i) for i in [0x3E,0x35,0x53,int(hex(ord(str(2))),16),0x0D]])
+        self.FPGA_Put_TX(FPGA_TX)
+        print('FPGA_TX:', FPGA_TX)
+        data = self.FPGA_ECO_Dat_analysis()
+        print('ECO DATA:', data)
+
 
 if __name__ == "__main__":
     A = UART_HAT()
