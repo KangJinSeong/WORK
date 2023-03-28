@@ -1,5 +1,8 @@
-#!/usr/bin/python
-# -*- coding:utf-8 -*-
+'''
+Date: 2023.03.28
+Title: Waveshare L76X GPS HAT Function python
+By: Kang Jin seong
+'''
 import serial
 import RPi.GPIO as GPIO
 

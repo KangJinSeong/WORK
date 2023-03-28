@@ -1,7 +1,9 @@
-# -*- coding:utf-8 -*-
-
+'''
+Date: 2023.03.28
+Title: Waveshare L76X GPS HAT Main Function python
+By: Kang Jin seong
+'''
 from Subpy import config
-# import config
 import math
 import time
 import RPi.GPIO as GPIO
@@ -94,7 +96,6 @@ class L76X(object):
         self.config.Uart_SendString(data.encode())
         self.config.Uart_SendByte('\r'.encode())
         self.config.Uart_SendByte('\n'.encode())
-        # print (data)
         
     def L76X_Gat_GNRMC(self):
         data = self.config.Uart_ReceiveString(BUFFSIZE)

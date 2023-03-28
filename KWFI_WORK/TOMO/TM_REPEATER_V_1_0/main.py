@@ -1,6 +1,6 @@
 '''
-Date: 2023.03.23
-Title: 3차원해수유동 시간의 따른 TM_REPEATER SW REV(5)
+Date: 2023.03.28
+Title: TM_REPEATER SW REV(6)
 By: Kang Jin seong
 '''
 
@@ -9,18 +9,23 @@ from Subpy import UART_V_1_0    #UART 통신 관련 모듈
 from multiprocessing import Process, Queue  # 멀티 프로세싱 관련 모듈
 import paho.mqtt.subscribe as subcribe  # MQTT 수신 관련 모듈
 import paho.mqtt.publish as publish     # MQTT 송신 관련 모듈
-import time     # 딜레이 과련 모듈
+import time     # 라즈베리파이 시간 관련 모듈
 
 class TM_Repeater:
     def __init__(self):
+        # ※ 클래스 함수 내부 모듈 선언
         self.Triger = TRX_Triger.TRX_TRG()  # FPGA 트리거 관련 함수 선언 
         self.UARTIP = UART_V_1_0.UART_HAT() # UART 통신 관련 함수 선언
         self.TIMEDATA = Queue() # Q 버퍼 선언
+        # ※ MQTT 서버 관련 변수 선언
         self.data_topics = 'Core/test12343Demension/data'   # MQTT 제어신호 관련 토픽
         self.GPS_topics = 'Core/test12343Demension/version' # MQTT GPS 신호 관련 토픽
         self.broker ='test.mosquitto.org'   # MQTT 브로커
+        # ※ 변수 선언
         self.StationID = 0  # 장비 시리얼 넘버
         self.startflag = 0  # 시작 신호 제어 상태 값
+        self.a = 0
+        self.b = 0
     def core1(self):    # Main Server로 부터 입력된 시간에 따라 TRX Controller를 구동하기 위한 Triger 신호 출력 함수
         while True:
             try:
@@ -37,6 +42,8 @@ class TM_Repeater:
                     self.Triger.main(self.StationID)  # TRX Controller 작동 루틴
             except Exception as e:
                 print('Core1 error:',e)    # 에러 발생 시 에러를 표시하고 다시 원 코드로 돌아간다.
+                self.a += 1; self.b += 1
+                print("성공 횟수:{}, 실패 횟수:{}".format(self.a,self.b))
     def core2(self):
             while True:
                 try:            
@@ -45,6 +52,8 @@ class TM_Repeater:
                     self.TIMEDATA.put(m.payload.decode())   # 큐 버퍼에 데이터 넣기
                 except Exception as e:
                     print('Core2 error:',e)    # 에러 발생 시 에러를 표시하고 다시 원 코드로 돌아간다.
+                    self.a += 1; self.b += 1
+                    print("성공 횟수:{}, 실패 횟수:{}".format(self.a,self.b))
     def core3(self):
         while True:
             try:
@@ -53,9 +62,11 @@ class TM_Repeater:
                     lat, long = self.compass.main() # GPS 데이터 얻기
                     print('위도:{}, 경도:{}'.format(lat, long))
                     publish.single(self.GPS_topics, str(self.StationID)+','+long+','+lat, hostname=self.broker, keepalive= 0)   # MQTT Server로 데이터 넣기
-                    time.sleep(8-int(self.StationID))   # 장비 별 데이터 넣는 시간 제어
+                    time.sleep(25-int(self.StationID))   # 장비 별 데이터 넣는 시간 제어
             except Exception as e:
                 print('Core3 error:',e)    # 에러 발생 시 에러를 표시하고 다시 원 코드로 돌아간다.
+                self.a += 1; self.b += 1
+                print("성공 횟수:{}, 실패 횟수:{}".format(self.a,self.b))               
     def FPGA_Version_info(self):    # 장비별 시리얼 번호 얻기를 위한 함수
         data = self.UARTIP.FPGA_Dat_analysis()  # UART 통신을 통한 데이터 분석
         if 'Correlator_ID' in data: # 버전 정보에서 ID 값 유무를 분석
