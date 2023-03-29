@@ -1,28 +1,16 @@
-import RPi.GPIO as GPIO
-# import serial
 
-# serialIP = serial.Serial('/dev/ttyS0', baudrate= 9600)
+from pyftpdlib.authorizers import DummyAuthorizer
+from pyftpdlib.handlers import FTPHandler
+from pyftpdlib.servers import FTPServer
 
-# serialIP.readline()
+# FTP 서버에서 사용할 사용자 계정 설정
+authorizer = DummyAuthorizer()
+authorizer.add_user("user", "password", "/home/kangjinseong", perm="elradfmwMT")
 
-# import socket
-# import time
+# FTP 서버 설정
+handler = FTPHandler
+handler.authorizer = authorizer
+server = FTPServer(("127.0.0.1", 21), handler)
 
-# while True:
-#     ipaddress = socket.gethostbyname(socket.gethostname())
-#     if ipaddress == '127.0.0.1':
-#         print('NOT')
-#     else:
-#         print(' ON ' + ipaddress)
-#     time.sleep(1)
-
-import os
-import time
-hostname = 'www.google.com'
-
-response = os.system("ping -c 1 " + hostname)
-
-if response == 0:
-    print("Network active")
-else:
-    print("Network error")
+# FTP 서버 시작
+server.serve_forever()

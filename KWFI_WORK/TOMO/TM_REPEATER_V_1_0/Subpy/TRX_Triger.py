@@ -1,6 +1,6 @@
 '''
-Date: 2023.03.28
-Title: Main Server로 부터 입력된 시간에 따라 TRX Controller를 구동하기 위한 Triger 신호 출력 함수
+Date: 2023.03.29
+Title: Main Server로 부터 입력된 시간에 따라 TRX Controller를 구동하기 위한 Triger 신호 출력 함수(REV1)
 By: Kang Jin seong
 '''
 import RPi.GPIO as GPIO # 라즈베리파이 포트 제어 관련 모듈
@@ -8,6 +8,8 @@ import time # 라즈베리파이 시간 관련 모듈
 from datetime import datetime   # 네트워크 날짜,시간 확인 관련 모듈
 from Subpy import UART_V_1_0    # UART 통신 관련 모듈
 import paho.mqtt.publish as publish # MQTT 송신 관련 모듈
+from nptdms import TdmsWriter, ChannelObject
+import datetime as dt
 
 class TRX_TRG:
     def __init__(self): # 클래스 함수 초기 설정 값 선언 
@@ -72,12 +74,16 @@ class TRX_TRG:
                         self.count = 0  # 루틴 실행 횟수 카운터 초기화
                         if data[0] == '(':  # 데이터 프로토콜에 맞춰서 데이터 분리
                             data_answer = data.replace(')(', ',')
-                            data_answer = data_answer[1:-1]           
+                            data_answer = data_answer[1:-2]           
                             Pico_data = self.UARTIP.PICO_Dat_analysis() # TRX_Controller Pico B/D와 UART 통신
                             FPGA_Temp_data = self.UARTIP.FPGA_Put_Temp()    # FPGA 온도 데이터 통신
                             # 데이터 합치기: 네트워크로 받은 ID + 장비 ID + Pico 데이터 + 신호처리 데이터
                             result = bytes(str(self.s_id),'utf-8')+b','+bytes(stationid,'utf-8')+b','+[Pico_data[1:] if b'\x00' in Pico_data else Pico_data][0]+b',' + bytes(FPGA_Temp_data,'utf-8')+b','+bytes(data_answer,'utf-8')
                             print('RX Data:', result)   
+                            x = dt.datetime.now()
+                            with TdmsWriter('/home/kangjinseong/TM_REPEATER_V_1_0/Log_data/LOG.tdms', mode='a') as tdms_writer:
+                                channel = ChannelObject('TM_Repeater_LOG', x.strftime("%A_%d._%B_%Y_%H_%M"), result.decode().split(','))
+                                tdms_writer.write_segment([channel]) 
                             publish.single(topic='Core/sendTestData1234/data',payload = result,hostname='test.mosquitto.org',keepalive= 0)  # MQTT Server로 데이터 넣기
                             break   # 수신 루틴 종료
                     if self.count >= 40:    # 3분 30초 경과 한 경우 수신 루틴 종료

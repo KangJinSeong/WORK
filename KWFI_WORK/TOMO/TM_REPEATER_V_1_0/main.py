@@ -1,6 +1,6 @@
 '''
-Date: 2023.03.28
-Title: TM_REPEATER SW REV(6)
+Date: 2023.03.29
+Title: TM_REPEATER SW REV(7)
 By: Kang Jin seong
 '''
 
@@ -68,14 +68,15 @@ class TM_Repeater:
                 self.a += 1; self.b += 1
                 print("성공 횟수:{}, 실패 횟수:{}".format(self.a,self.b))               
     def FPGA_Version_info(self):    # 장비별 시리얼 번호 얻기를 위한 함수
-        data = self.UARTIP.FPGA_Dat_analysis()  # UART 통신을 통한 데이터 분석
-        if 'Correlator_ID' in data: # 버전 정보에서 ID 값 유무를 분석
-            answer = data.split('=')
-            self.StationID = answer[1][1]
-            State = 1
-        else:
-            self.StationID = 0
-            State = 0
+        while True:
+            data = self.UARTIP.FPGA_Dat_analysis()  # UART 통신을 통한 데이터 분
+            print(data)
+            if 'Correlator_ID' in data: # 버전 정보에서 ID 값 유무를 분석
+                answer = data.split('=')
+                self.StationID = answer[1][1]
+                State = 1
+            if 'Ok' in data:
+                break
         return State, self.StationID 
 
 if __name__ == "__main__":  # Main 함수 실행 루틴
