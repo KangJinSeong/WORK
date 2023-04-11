@@ -38,7 +38,8 @@ class TM_Repeater:
                         self.Triger.timezone(hour=answer[0],min=answer[1],interval=answer[2],id=answer[3])  # 시작 시간 설정
                     else:
                         self.startflag = 0
-                if self.startflag:  # 시작 신호 제어 상태 값
+                        self.Triger.timezone(hour=answer[0],min=answer[1],interval=answer[2],id=answer[3])  # 시작 시간 설정
+                if self.startflag:
                     self.Triger.main(self.StationID)  # TRX Controller 작동 루틴
             except Exception as e:
                 print('Core1 error:',e)    # 에러 발생 시 에러를 표시하고 다시 원 코드로 돌아간다.
@@ -48,6 +49,7 @@ class TM_Repeater:
             while True:
                 try:            
                     m = subcribe.simple(self.data_topics, hostname=self.broker, keepalive=20)   # MQTT Server로부터 데이터 얻기
+                    time.sleep(3)
                     print('MQTT Subcribe:',m.payload.decode())
                     self.TIMEDATA.put(m.payload.decode())   # 큐 버퍼에 데이터 넣기
                 except Exception as e:
@@ -62,7 +64,7 @@ class TM_Repeater:
                     lat, long = self.compass.main() # GPS 데이터 얻기
                     print('위도:{}, 경도:{}'.format(lat, long))
                     publish.single(self.GPS_topics, str(self.StationID)+','+long+','+lat, hostname=self.broker, keepalive= 0)   # MQTT Server로 데이터 넣기
-                    time.sleep(25-int(self.StationID))   # 장비 별 데이터 넣는 시간 제어
+                    time.sleep(7) # int(self.StationID))   # 장비 별 데이터 넣는 시간 제어
             except Exception as e:
                 print('Core3 error:',e)    # 에러 발생 시 에러를 표시하고 다시 원 코드로 돌아간다.
                 self.a += 1; self.b += 1

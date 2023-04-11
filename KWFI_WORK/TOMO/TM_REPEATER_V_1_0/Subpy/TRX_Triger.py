@@ -40,14 +40,16 @@ class TRX_TRG:
             result = [0,0,0,0]
         return result 
     def main(self, stationid):  # Class TRX_TRG Main Function(입력값: 장비번호)
+        time.sleep(1)
         if (self.s_hour%24) == datetime.now().hour: # Timezone 함수로 설정한 변수 값과 네트워크 동기화 된 시간 판단
             if (self.s_min%60) == datetime.now().minute:    # Timezone 함수로 설정한 변수 값과 네트워크 동기화 된 분 판단
                 '''
                 ※ 안전코드
-                 1) 네트워크 통신 불안으로 인한 timezone 함수의 실행(시간 업데이트)이 되지 않았을 경우 interval 과 관계없이 해당 분에 계속 Main 함수 실행
-                 2) 해당 시간이 경과되면 s_min 변수를 -1감소 시켜 해당 분에 Main 함수 실행 방지
-                 3) 네트워크 통신 연결 대기 
+                1) 네트워크 통신 불안으로 인한 timezone 함수의 실행(시간 업데이트)이 되지 않았을 경우 interval 과 관계없이 해당 분에 계속 Main 함수 실행
+                2) 해당 시간이 경과되면 s_min 변수를 -1감소 시켜 해당 분에 Main 함수 실행 방지
+                3) 네트워크 통신 연결 대기 
                 '''
+                print('main routine ing min')
                 self.s_min = datetime.now().minute-1    # 안전코드
                 FPGA_TX = ''.join([chr(i) for i in [0x3E,0x35,0x53,int(hex(ord(str(self.s_id))),16),0x0D]]) # FPGA 송신 설정 프로토콜 변수
                 while True: # FPGA 프로토콜에 맞춰 UART 통신 및 GPIO 포트 설정
@@ -90,5 +92,6 @@ class TRX_TRG:
                         self.count = 0  # 해당 루틴 실행 횟수 초기화
                         print('RX Data End')
                         break   # 수신 루틴 종료
+
 
          
