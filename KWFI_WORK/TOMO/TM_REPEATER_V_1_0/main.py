@@ -49,7 +49,7 @@ class TM_Repeater:
             while True:
                 try:            
                     m = subcribe.simple(self.data_topics, hostname=self.broker, keepalive=20)   # MQTT Server로부터 데이터 얻기
-                    time.sleep(3)
+                    time.sleep(15)
                     print('MQTT Subcribe:',m.payload.decode())
                     self.TIMEDATA.put(m.payload.decode())   # 큐 버퍼에 데이터 넣기
                 except Exception as e:
