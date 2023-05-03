@@ -91,6 +91,7 @@ class TRX_TRG:
                                 # 데이터 합치기: 네트워크로 받은 ID + 장비 ID + Pico 데이터 + 신호처리 데이터
                                 result = bytes(str(self.s_id),'utf-8')+b','+bytes(stationid,'utf-8')+b','+[Pico_data[1:] if b'\x00' in Pico_data else Pico_data][0]+b',' + bytes(FPGA_Temp_data,'utf-8')+b','+bytes(data_answer[:-1],'utf-8')
                                 print('RX Data:', result)   
+                                time.sleep(int(stationid) + 1)
                                 publish.single(topic='Core/sendTestData1234/data',payload = result,hostname='test.mosquitto.org',keepalive= 0)  # MQTT Server로 데이터 넣기
                                 break   # 수신 루틴 종료
                         if self.count >= 40:    # 3분 30초 경과 한 경우 수신 루틴 종료
