@@ -51,6 +51,8 @@ class UART_HAT:
                 if data != '':       
                     data = data.split('=')  # 수신데이터 분석
                     data = data[1][0:-2]
+                else:
+                    data = '0'
         except:
                 data = '0'
         return data
