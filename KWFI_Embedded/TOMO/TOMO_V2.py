@@ -1,0 +1,221 @@
+'''
+Date: 2022.09.28
+Title: 3차원 해수유동 시스템 데이터 관리
+By: Kang Jin Seong
+
+'''
+
+import RPi.GPIO as GPIO
+import datetime as dt
+import time
+import serial
+
+from multiprocessing import Process, Queue
+import paho.mqtt.subscribe as subscribe
+import paho.mqtt.publish as publish
+import threading
+
+import urllib
+from urllib import request
+
+channel = 23    # 1pps 신호 입력 포트 설정
+led = 18    # 트리거 신호 출력 포트 설정
+
+GPIO.setmode(GPIO.BCM)  #GPIO 포트 설정은 
+GPIO.setup(channel, GPIO.IN)    # 1pps 신호 입력 포트
+GPIO.setup(led, GPIO.OUT)   # FPGA 트리거 출력 신호
+GPIO.setwarnings(False)
+
+
+state = 0   # 상태의 따른 트리거 제어 변수
+
+
+'''
+triger(): 1pps 라이징 에지 신호에 맞춰 트리커 신호 출력
+'''
+def triger(serverRXdata, version_state):   # Core1:
+    stopflag = False
+    startflag = False
+    start_m = 100
+    starttime = False
+    version_info_flag = False
+    topics1 = "Core/test12343Demension/version"
+    broker = "test.mosquitto.org"
+    
+    while True:
+        if not serverRXdata.empty(): # 큐버퍼가 꽉차있으면 실행
+            maindata = serverRXdata.get()
+            maindata = maindata.split(',')
+            if maindata[0] == 'STOP':
+                stopflag = True
+                startflag = False
+                starttime = False
+                version_info_flag = False
+                
+            if maindata[len(maindata)- 1] == 'START':
+                startflag = True
+                start_m = maindata[len(maindata) - 3] 
+                   
+            if maindata[0] == 'VERSION_INFO':
+                stopflag = False
+                startflag = False
+                starttime = False
+                version_info_flag = True       
+        
+        if not version_state.empty():
+            subdata = version_state.get()
+        
+        if version_info_flag:
+            if subdata == 'FV1ON':
+                if internet_on():
+                    publish.single(topics1,subdata, hostname = broker)
+                
+        
+        if stopflag:
+
+            cm = dt.datetime.now().minute
+            
+            if dt.datetime.now().minute == int(start_m):
+                starttime = True
+                stopflag = False
+                ptm = dt.datetime.now().minute
+
+
+        if startflag & starttime:
+                  
+            ctm = dt.datetime.now().minute
+
+
+            if ctm >= ptm + int(maindata[len(maindata) - 2]):
+
+                time.sleep(0.2)
+                GPIO.output(led, True)
+                time.sleep(3)
+                GPIO.output(led, False)                
+
+                print(dt.datetime.now(), 'start')
+                ptm = ctm
+            if (60 == ptm + int(maindata[len(maindata) - 2])) & (ctm == 0):
+
+                time.sleep(0.2)
+                GPIO.output(led, True)
+                time.sleep(3)
+                GPIO.output(led, False)                
+
+                print(dt.datetime.now(), 'Start')
+                ptm = ctm
+
+
+
+def mqtt_subscribe_rasp(serverRXdata):
+    topics = "Core/test12343Demension/data"
+    broker = "test.mosquitto.org"
+
+    while True:
+        print('end')
+        if internet_on():
+            m = subscribe.simple(topics, hostname = broker,retained = False, msg_count = 1)
+        print('Message:', m.payload)
+        data = m.payload.decode('utf-8')
+        serverRXdata.put(data)
+
+
+ 
+def mqtt_publish_rasp(uartdata):
+    topics = "Core/sendTestData1234/data"
+    topics1 = "Core/test12343Demension/version"
+    broker = "test.mosquitto.org"
+    count = 0
+    while True:
+        if not uartdata.empty(): # 큐버퍼가 꽉차있으면 실행
+            
+            m = uartdata.get()
+            print(m)
+            if internet_on():
+                publish.single(topics,m, hostname = broker) 
+                print('Done1')
+
+        if GPIO.input(channel) == 1:
+            print('GPS ON')
+            if internet_on():
+                publish.single(topics1,'GPS1', hostname = broker)
+
+        time.sleep(0.7)
+
+            
+            
+
+def uart_FPGA(uartdata):
+    serialIP = serial.Serial('/dev/ttyS0', baudrate= 115200)
+
+    while True:
+        dat = serialIP.readline()
+        print('RX Data:', dat)
+        try:
+            dat = dat.decode()
+            if dat[0] == '(':
+                dat = dat[:len(dat)-2]
+                dat = dat.replace(")(", ",")
+                dat = '1' + dat
+                uartdata.put(dat)
+        except Exception as e:
+            print('Error')
+        
+def version_on():
+    topics = "Core/test12343Demension/version"
+    broker = "test.mosquitto.org"
+        
+    serialIP = serial.Serial('/dev/ttyS0', baudrate= 115200, timeout = 10)
+    while True:
+        serialIP.write(b'>5@0\r')
+        data = serialIP.read(1024)
+        print(data)
+        if data.decode('utf-8')[:4] == '>5@0':
+            if internet_on():
+                publish.single(topics,'FV1ON', hostname = broker)
+            version_state.put('FV1ON')
+            return True
+            break
+        else:
+            return False
+ 
+def internet_on():
+    try:
+        request.urlopen('http://223.130.200.107', timeout = 2)
+        return True
+    except Exception as e:
+        print('internet error')
+        print(e)
+        return False
+        
+if __name__ == '__main__':
+    serverRXdata = Queue()
+    serverTXdata = Queue()
+    uartdata = Queue()
+    version_state = Queue()
+
+
+    while True:
+        print('internet Detecting...')
+        print('version Detecting...')
+        time.sleep(3)
+        if internet_on() & version_on():
+
+            print('Done')
+            p1 = Process(target = triger, args =(serverRXdata, version_state))
+            p2 = Process(target = mqtt_subscribe_rasp, args = (serverRXdata,))
+            p3 = Process(target = mqtt_publish_rasp, args = (uartdata,))
+            p4 = Process(target = uart_FPGA, args = (uartdata, ))
+
+            p1.start()
+            p2.start()
+            p3.start()
+            p4.start()
+
+
+            p1.join()
+            p2.join()
+            p3.join()
+            p4.join()
+            
+            break
