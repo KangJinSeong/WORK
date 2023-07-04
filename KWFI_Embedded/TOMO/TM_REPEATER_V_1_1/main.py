@@ -1,6 +1,6 @@
 '''
-Date: 2023.03.29
-Title: TM_REPEATER SW REV(7)
+Date: 2023.07.04
+Title: TM_REPEATER SW REV(8)
 By: Kang Jin seong
 '''
 
@@ -10,6 +10,9 @@ from multiprocessing import Process, Queue  # 멀티 프로세싱 관련 모듈
 import paho.mqtt.subscribe as subcribe  # MQTT 수신 관련 모듈
 import paho.mqtt.publish as publish     # MQTT 송신 관련 모듈
 import time     # 라즈베리파이 시간 관련 모듈
+import ntplib
+from time import ctime
+from datetime import datetime
 
 class TM_Repeater:
     def __init__(self):
@@ -80,7 +83,27 @@ class TM_Repeater:
                 State = 1
             if 'Ok' in data:
                 break
-        return State, self.StationID 
+            
+        return State, self.StationID
+    
+    def NTP_SYNC(self):
+        NTP_SYNC_ACK = 0
+        while True:
+            try:
+                ntp_client = ntplib.NTPClient()
+                response = ntp_client.request('time.windows.com')
+                print(ctime(response.tx_time))
+                print('offset: {:2f} s'.format(response.offset))
+                if int(response.offset) == 0:
+                    NTP_SYNC_ACK = 1
+                    #break
+                time.sleep(1)    
+    
+            except Exception as e:
+                print('현재 장비 시간: {},{},{}'.format(datetime.now().hour, datetime.now().minute, datetime.now().second))
+                print('NTP SYNC error: {}'.format(e))
+                time.sleep(1) 
+            return NTP_SYNC_ACK
 
 if __name__ == "__main__":  # Main 함수 실행 루틴
     B = TRX_Controller_Swtich.TRX_Power_switch()    # Switch 보드 제어를 위한 함수 선언
@@ -89,18 +112,21 @@ if __name__ == "__main__":  # Main 함수 실행 루틴
     B.main(1)   # TRX Controller 전원 ON
     A = TM_Repeater()    # TM Repater
     while True:
-        State, Station_ID = A.FPGA_Version_info()   # 장비별 시리얼 번호 얻기를 위한 함수
-        if State:
-            print('Station_Number:',Station_ID)
-            print('FPGA_Version Check Complited') 
-            p1 = Process(target = A.core1, args=() )
-            p2 = Process(target = A.core2, args=() )
-            p3 = Process(target = A.core3, args=() )
-            p1.start()
-            p2.start()
-            p3.start()
-            p1.join()
-            p2.join()
-            p3.join()
-        else:
-            print('FPGA_Version Unknown') 
+        # A.NTP_SYNC()
+        if A.NTP_SYNC():
+            State, Station_ID = A.FPGA_Version_info()   # 장비별 시리얼 번호 얻기를 위한 함수
+            if State:
+                print('Station_Number:',Station_ID)
+                print('FPGA_Version Check Complited') 
+                p1 = Process(target = A.core1, args=() )
+                p2 = Process(target = A.core2, args=() )
+                p3 = Process(target = A.core3, args=() )
+                p1.start()
+                p2.start()
+                p3.start()
+                p1.join()
+                p2.join()
+                p3.join()
+            else:
+                print('FPGA_Version Unknown') 
+        time.sleep(1)

@@ -47,10 +47,11 @@ class UART_HAT:
         self.FPGA_UART.write(self.FPGA_Temp.encode())   # FPGA 보드 UART 송신
         GPIO.output(self.FPGA_EN, False)    # RX Mode 설정(A1.1.2 POWER B/D 회로도 U2 MAX3221) 
         data = self.FPGA_Dat_analysis() # FPGA 보드 UART 수신 관련 함수
+        print(data)
         try:
                 if data != '':       
                     data = data.split('=')  # 수신데이터 분석
-                    data = data[1][0:-2]
+                    data = data[1][0:-1]
                 else:
                     data = '0'
         except:
@@ -61,3 +62,6 @@ class UART_HAT:
         self.FPGA_UART.write(str(FPGA_TX).encode()) # FPGA 보드 UART 송신
         GPIO.output(self.FPGA_EN, False)    # RX Mode 설정(A1.1.2 POWER B/D 회로도 U2 MAX3221)
 
+if __name__ == "__main__":  # Main 함수 실행 루틴
+        A = UART_HAT()
+        print(A.FPGA_Put_Temp())

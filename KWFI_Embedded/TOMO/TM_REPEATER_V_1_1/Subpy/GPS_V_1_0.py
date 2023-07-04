@@ -27,11 +27,12 @@ class GPS_HAT:
         time.sleep(2)
         self.x.L76X_Set_Baudrate(115200)
         self.lattidue = 0
-        self.longitude = 0
+        self.longitude = 0 
     def get_data(self):
         data = self.x.L76X_Gat_GNRMC()
         data = data.decode(encoding='ISO-8859-1')
         answer = data.split('\r\n')
+        #print(answer)
         for i in answer:
             if '$GNRMC' in i:
                 result = i.split(',')[1:]
@@ -46,15 +47,18 @@ class GPS_HAT:
         return self.lattidue, self.longitude  
 
     def main(self):
-        lat,lon = self.get_data()
+        try:
+            lat,lon = self.get_data()
 
-        '''
-        lat, lon 데이터가 없을 경우 처리 루틴 필요
-        '''
+            '''
+            lat, lon 데이터가 없을 경우 처리 루틴 필요
+            '''
 
-        lat = '{:0.8f}'.format(lat)
-        lon = '{:0.8f}'.format(lon)
-
+            lat = '{:0.8f}'.format(lat)
+            lon = '{:0.8f}'.format(lon)
+        except:
+            lat = '{:0.8f}'.format(0)
+            lon = '{:0.8f}'.format(0)
 
         return lat, lon
 
