@@ -4,11 +4,10 @@ Title: 3차원해수유동 GPS
 By: Kang Jin seong
 '''
 
-
 from Subpy import config
 from Subpy import L76X
-#import config   #단독으로 설정할떄
-#import L76X #단독으로 설정할때
+# import config   #단독으로 설정할떄
+# import L76X #단독으로 설정할때
 import time
 
 
@@ -36,7 +35,6 @@ class GPS_HAT:
         #print(answer)
         for i in answer:
             if '$GNRMC' in i:
-                #print(i)
                 result = i.split(',')[1:]
                 for i,r in zip(result, result[1:]):
                     if r == 'N':
@@ -68,6 +66,6 @@ if __name__ == "__main__":
     print('GPS START')
     A = GPS_HAT()
     try:
-        print(A.get_data())
+        print(A.main())
     except Exception as e:
         pass

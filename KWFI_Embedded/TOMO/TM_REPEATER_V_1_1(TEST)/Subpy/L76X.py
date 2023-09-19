@@ -4,7 +4,7 @@ Title: Waveshare L76X GPS HAT Main Function python
 By: Kang Jin seong
 '''
 from Subpy import config
-#import config
+# import config
 import math
 import time
 import RPi.GPIO as GPIO

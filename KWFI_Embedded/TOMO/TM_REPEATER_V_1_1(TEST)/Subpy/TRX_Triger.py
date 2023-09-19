@@ -8,7 +8,7 @@ import time # 라즈베리파이 시간 관련 모듈
 from datetime import datetime   # 네트워크 날짜,시간 확인 관련 모듈
 from Subpy import UART_V_1_1    # UART 통신 관련 모듈
 import paho.mqtt.publish as publish # MQTT 송신 관련 모듈
-#from nptdms import TdmsWriter, ChannelObject
+from nptdms import TdmsWriter, ChannelObject
 import datetime as dt
 import ntplib
 
