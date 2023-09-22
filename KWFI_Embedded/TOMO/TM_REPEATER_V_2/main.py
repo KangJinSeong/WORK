@@ -65,8 +65,8 @@ class TM_Repeater:
                     return NTP_SYNC_ACK # Flag 변수를 1로 Return
                 time.sleep(1)    
             except Exception as e:
-                #print('현재 장비 시간: {},{},{}'.format(datetime.now().hour, datetime.now().minute, datetime.now().second))
-                #print('NTP SYNC error: {}'.format(e))
+                #print('현재 장비 시간: {},{},{}'.format(datetime.now().hour, datetime.now().minute, datetime.now().second))    # 디버깅을 위한 코드
+                #print('NTP SYNC error: {}'.format(e))  # 디버깅을 위한 코드
                 time.sleep(1) 
 
         
@@ -75,7 +75,7 @@ class TM_Repeater:
             data = self.UARTIP.FPGA_Dat_analysis()  # UART 통신을 통한 데이터 분석
             print(data)
             if 'Correlator_ID' in data: # 버전 정보에서 ID 값 유무를 분석
-                answer = data.split('=')
+                answer = data.split('=')    # 데이터 프로토콜 참조
                 self.StationID = answer[1][1]
                 State = 1
             if 'Ok' in data:    # 수신 데이터 중 'Ok' 가 있는 경우 데이터 완료로 가정
@@ -88,31 +88,37 @@ class TM_Repeater:
                 while True: # 첫 번째 루프
                     print('Time Test')  # 디버깅을 위한 코드
                     '''
-                    라운드 로빙 방식의 Default 값의 들어 왔을 경우 self.min_index 변수에 할당
+                    라운드 로빙 방식의 Default 값이 해당됬을 경우 self.min_index 변수에 할당
+                    Default 값의 3분전부터 TRX_Controller의 전원을 인가한다
+                    1분 전 부터 FPGA와 통신을 해야하기 떄문에 최대 9분사이인 경우에만 self.min_indeㅌ 변수에 할당한다
+                    그 이외의 시간에는 할당하지 않기 때문에 동작을 하지 않는다. 
                     '''
-                    if (datetime.now().minute ) >= 7 and (datetime.now().minute ) <=  9:
+                    if (datetime.now().minute ) >= 7 and (datetime.now().minute ) <=  9:    # 7분에서 9분 사이인 경우 
                         self.TRX_Controller_Switch(0)   # TRX_Controller의 메인전원을 ON
                         print('START : [10]')
                         self.min_index = 10
-                        break
+                        break   # 해당 시간에 들어 온경우 첫 번쨰 루프를 종료한다.
                     elif (datetime.now().minute) >= 27 and (datetime.now().minute ) <=  29:
                         self.TRX_Controller_Switch(0)
                         print('START : [30]')
                         self.min_index = 30
-                        break
+                        break   # 해당 시간에 들어 온경우 첫 번쨰 루프를 종료한다.
                     elif (datetime.now().minute) >= 47 and (datetime.now().minute ) <=  49:
                         self.TRX_Controller_Switch(0)
                         print('START : [50]')
                         self.min_index = 50
-                        break
-                    else:   # Default 값의 들어 오지 않은 경우 TRX_Controller의 메인전원을 OFF
+                        break   # 해당 시간에 들어 온경우 첫 번쨰 루프를 종료한다.
+                    else:   # Default 값의 들어 오지 않은 경우 TRX_Controller의 메인전원을 OFF, 첫 번째 루프를 계속 실행한다.
                         time.sleep(10)
                         self.TRX_Controller_Switch(1)
                         time.sleep(30)
-                print('end')
+                print('end')    # 디버깅을 위한 코드
 
                 while True: # 두 번째 루프
-                    if self.min_index == datetime.now().minute + 1:
+                    if self.min_index == datetime.now().minute + 1: # Default 값의 1분 전부터 두 번째 루프를 실행한다. 
+                        '''
+                        라운드 로빙 방식은 5EA 
+                        '''
                         for i in range(1,6):
                             FPGA_TX = ''.join([chr(i) for i in [0x3E,0x35,0x53,int(hex(ord(str(i))),16),0x0D]]) # FPGA 송신 설정 프로토콜 변수
                             self.UARTIP.FPGA_Put_TX(FPGA_TX)    # FPGA 송신 설정 명렁어 송신(UART)
