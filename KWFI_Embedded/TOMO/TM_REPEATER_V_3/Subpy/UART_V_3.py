@@ -111,58 +111,81 @@ class UART_HAT:
                 return int(data.split('=')[-1])
             except Exception as e:
                 pass  
-    def FPGA_Put_TX(self, FPGA_TX, ID):
+    def FPGA_Put_TX(self, FPGA_TX):
         '''
         FPGA 송신 설정 명렁어 송신(UART)
         FPGA_EN을 HIGH 설정 후 데이터 프로토콜에 맞춰 FPGA TX 정보 송신\r\n
         (A1.1.2 POWER B/D 회로도 U2 MAX3221)\r\n
          _Input: None
          _Return: >5S + ID
-        '''            
-        while True:
-            GPIO.output(self.FPGA_EN, True)
-            self.FPGA_UART.write(str(FPGA_TX).encode())
-            GPIO.output(self.FPGA_EN, False)
-            data = self.FPGA_Dat_analysis()
-            print(data)
-            if data == ('>5S' + f'{ID}'+'\r'):
-                break
-    def FPGA_Put_Order(self, FPGA_Order, order):
+        '''
+        GPIO.output(self.FPGA_EN, True)
+        self.FPGA_UART.write(str(FPGA_TX).encode())
+        GPIO.output(self.FPGA_EN, False)       
+        
+#         while True:
+#             GPIO.output(self.FPGA_EN, True)
+#             self.FPGA_UART.write(str(FPGA_TX).encode())
+#             GPIO.output(self.FPGA_EN, False)
+#             data = self.FPGA_Dat_analysis()
+#             print(data)
+#             if data == ('>5S' + f'{ID}'+'\r'):
+#                 break
+    def FPGA_Put_Order(self, FPGA_Order):
         '''
         FPGA Order 설정 명렁어 송신(UART)
         FPGA_EN을 HIGH 설정 후 데이터 프로토콜에 맞춰 FPGA TX 정보 송신\r\n
         (A1.1.2 POWER B/D 회로도 U2 MAX3221)\r\n
          _Input: None
          _Return: >5W + Order
-        '''        
-        while True:
-            GPIO.output(self.FPGA_EN, True)
-            self.FPGA_UART.write(str(FPGA_Order).encode())
-            GPIO.output(self.FPGA_EN, False)
-            data = self.FPGA_Dat_analysis()
-            print(data)
-            if data == ('>5W' + f'{order}'+'\r'):
-                break           
-    def FPGA_Put_Q(self, FPGA_Q, Q_value):
+        '''
+        GPIO.output(self.FPGA_EN, True)
+        self.FPGA_UART.write(str(FPGA_Order).encode())
+        GPIO.output(self.FPGA_EN, False)
+        for p in range(2):  # FPGA Triger 포트 출력 한경우 FPGA로부터 수신 받은 데이터 처리 루틴 
+            try:
+                trash_data = self.FPGA_Dat_analysis()
+                print('Trash_data :',trash_data)
+            except Exception as e:
+                pass       
+#         while True:
+#             GPIO.output(self.FPGA_EN, True)
+#             self.FPGA_UART.write(str(FPGA_Order).encode())
+#             GPIO.output(self.FPGA_EN, False)
+#             data = self.FPGA_Dat_analysis()
+#             print(data)
+#             if data == ('>5W' + f'{order}'+'\r'):
+#                 break           
+    def FPGA_Put_Q(self, FPGA_Q):
         '''
         FPGA Q 설정 명렁어 송신(UART)
         FPGA_EN을 HIGH 설정 후 데이터 프로토콜에 맞춰 FPGA TX 정보 송신\r\n
         (A1.1.2 POWER B/D 회로도 U2 MAX3221)\r\n
          _Input: None
          _Return: >5I + Q
-        '''        
-        while True:
-            GPIO.output(self.FPGA_EN, True)
-            self.FPGA_UART.write(str(FPGA_Q).encode())
-            GPIO.output(self.FPGA_EN, False)
-            data = self.FPGA_Dat_analysis()
-            print(data)
-            if data == ('>5I' + f'{Q_value}'+'\r'):
-                break    
+        '''
+        GPIO.output(self.FPGA_EN, True)
+        self.FPGA_UART.write(str(FPGA_Q).encode())
+        GPIO.output(self.FPGA_EN, False)
+        for p in range(2):  # FPGA Triger 포트 출력 한경우 FPGA로부터 수신 받은 데이터 처리 루틴 
+            try:
+                trash_data = self.FPGA_Dat_analysis()
+                print('Trash_data :',trash_data)
+            except Exception as e:
+                pass        
+#         while True:
+#             GPIO.output(self.FPGA_EN, True)
+#             self.FPGA_UART.write(str(FPGA_Q).encode())
+#             GPIO.output(self.FPGA_EN, False)
+#             data = self.FPGA_Dat_analysis()
+#             print(data)
+#             if data == ('>5I' + f'{Q_value}'+'\r'):
+#                 break    
 
 if __name__ == "__main__":  # Main 함수 실행 루틴
         A = UART_HAT()
-        A.FPGA_Put_Q(''.join([chr(i) for i in [0x3E,0x35,0x49,int(hex(ord(str(8))),16),0x0D]]), 8)
+#         A.FPGA_Put_Q(''.join([chr(i) for i in [0x3E,0x35,0x49,int(hex(ord(str(8))),16),0x0D]]))
+        print(A.PICO_Dat_analysis())
         
 
 
