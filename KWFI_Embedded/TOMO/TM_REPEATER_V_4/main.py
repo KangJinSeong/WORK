@@ -56,7 +56,7 @@ class TM_Repeater:
          _start_minute: 라운드 로빙방식에서 시간제어를 위한 변수
          _FPGA_Temp_data: FPGA에서 수집되는 온도 변수
          _Queue4: GPSDATA(1PPS, Latitude, Longitude, Number) 관련 변수
-         _Queue2: BDDATA(배터리 전원, 소모전류, 컨트롤 온도, 수온, 압력, Roll, Pitch, Number) 관련 변수
+         _Queue2: BDDATA(배터리 전원, 소모전류, 수온, 압력, Roll, Pitch, 컨트롤 온도, Number) 관련 변수
         '''
         self.ID = 0
         self.Q = 8
