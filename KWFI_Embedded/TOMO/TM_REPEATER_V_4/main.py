@@ -1,7 +1,7 @@
 '''
 Date: 2024.07.04
-Title: TM_REPEATER V4.0(라운드 로빙 방식 최적화 및 Labview GUI 호환 )
-Rev: Rev1
+Title: TM_REPEATER V4.0( 데이터 업로드 최적화 )
+Rev: Rev2
 By: Kang Jin seong
 '''
 
@@ -56,7 +56,7 @@ class TM_Repeater:
          _start_minute: 라운드 로빙방식에서 시간제어를 위한 변수
          _FPGA_Temp_data: FPGA에서 수집되는 온도 변수
          _Queue4: GPSDATA(1PPS, Latitude, Longitude, Number) 관련 변수
-         _Queue2: BDDATA(배터리 전원, 소모전류, 수온, 압력, Roll, Pitch, 컨트롤 온도, Number) 관련 변수
+         _Queue2: BDDATA(배터리 전원, 소모전류, 컨트롤 온도, 수온, 압력, Roll, Pitch, Number) 관련 변수
         '''
         self.ID = 0
         self.Q = 8
@@ -227,7 +227,7 @@ class TM_Repeater:
                             
 
                         print(f'CORE1, Q:{self.Q}, Order:{self.Order}') # 디버깅을 위한 함수(차후 삭제)
-                        for i in range(2,4):    # 현재 장비 설치 대수가 2대 이기 때무네 range(2,4) 차후 range(2,6)으로 변경 예정
+                        for i in range(1,6):    # 현재 장비 설치 대수가 2대 이기 때무네 range(2,4) 차후 range(2,6)으로 변경 예정
                             '''
                              _FPGA_TX: 라운드 로빙 방식 운용의 따라 1번 부터 순차적으로 송신 진행 그에 따른 명령어를 FPGA에 전달한다.
                             '''
@@ -315,7 +315,13 @@ class TM_Repeater:
                     self.Queue2 = f'{self.Pico_Data},NONE,{self.ID}'
                     self.queue2_4 = f'queue2:{self.Queue2}, queue4:{self.Queue4}'
                     print(f'Core3_Data:{self.queue2_4}') # 디버깅을 위한 함수(차후 삭제)
-                    publish.single(topic=self.publish_topics, payload=self.queue2_4, hostname=self.broker, keepalive=0)
+                    if (datetime.now().minute) >= 7 and (datetime.now().minute) <= 9:
+                        publish.single(topic=self.publish_topics, payload=self.queue2_4, hostname=self.broker, keepalive=0)                                 
+                    elif (datetime.now().minute) >= 27 and (datetime.now().minute) <= 29:
+                        publish.single(topic=self.publish_topics, payload=self.queue2_4, hostname=self.broker, keepalive=0)                                       
+                    elif (datetime.now().minute) >= 47 and (datetime.now().minute) <= 49:
+                        publish.single(topic=self.publish_topics, payload=self.queue2_4, hostname=self.broker, keepalive=0)
+                    # publish.single(topic=self.publish_topics, payload=self.queue2_4, hostname=self.broker, keepalive=0)
                     '''
                      _MQTT_Publish를 안정하게 하기 위한 시간 지연 값(시험을 통한 도출) -> 차후 수정 필요
                     '''
@@ -350,9 +356,11 @@ class TM_Repeater:
                     '''
                      _ MQTT Cloud 안정을 위한 3번의 송신(시험을 통한 도출) -> 차후 수정 필요
                     '''
-                    for i in range(0,3):
-                        publish.single(topic=self.publish_topics, payload=queue2_3_4, hostname=self.broker, keepalive=0)
-                        time.sleep(3*self.ID)
+                    time.sleep(2)
+                    publish.single(topic=self.publish_topics, payload=queue2_3_4, hostname=self.broker, keepalive=0)
+#                     for i in range(0,3):
+#                         publish.single(topic=self.publish_topics, payload=queue2_3_4, hostname=self.broker, keepalive=0)
+#                         time.sleep(3*self.ID)
 
                     '''
                      _수집된 데이터를 통신으로 잃어버릴 수 있는 경우가 있기 때문에 해당 데이터는 SD카드에 저장되어 유실상황을 방지한다.
